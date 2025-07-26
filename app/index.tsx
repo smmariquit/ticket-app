@@ -1,15 +1,19 @@
-import { Text, View } from "react-native";
+import React from 'react';
+import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
+import BusTicketingForm from './components/BusTicketingForm';
 
 export default function Index() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#2b8aed" />
+      <BusTicketingForm />
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f8f8',
+  },
+});

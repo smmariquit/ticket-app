@@ -1,6 +1,4 @@
-// Bus Trip Application Constants
-// This file contains all the dropdown options and configuration data
-// used throughout the bus trip entry application
+// Constants file
 
 export const BUS_NUMBERS = [
   2001, 2003, 2005, 2006, 2007, 2008, 2009, 2011,
@@ -78,7 +76,10 @@ export const getDriverOptions = () => DRIVERS.map(driver => ({ label: driver, va
 export const getConductorOptions = () => CONDUCTORS.map(conductor => ({ label: conductor, value: conductor }));
 export const getPassengerCategoryOptions = () => PASSENGER_CATEGORIES.map(category => ({ label: category, value: category }));
 export const getRouteOptions = () => ROUTES.map(route => ({ label: route, value: route }));
-export const getStopsForRoute = (route: Route) => ROUTE_STOPS[route]?.stops || [];
+export const getStopsForRoute = (route: Route): readonly string[] => {
+  const routeData = ROUTE_STOPS[route];
+  return routeData ? routeData.stops : [];
+};
 export const getDefaultFromForRoute = (route: Route) => ROUTE_STOPS[route]?.defaultFrom;
 
 // Constants for discount calculations

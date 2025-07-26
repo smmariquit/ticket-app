@@ -1,50 +1,98 @@
 # Welcome to your Expo app 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# Bus Ticketing App - React Native Implementation
 
-## Get started
+A React Native implementation of the bus ticketing form with multi-step interface, fare calculation, and offline capabilities.
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- **Multi-Step Form**: Clean interface with step-by-step data entry
+- **Real-time Fare Calculation**: Automatic fare computation with discounts
+- **Form Validation**: Real-time validation with user feedback
+- **Confirmation Modal**: Review details before submission
+- **TypeScript Support**: Full type safety throughout the app
+- **Responsive Design**: Works on all screen sizes
 
-2. Start the app
+## Components
 
-   ```bash
-   npx expo start
-   ```
+### Main Components
 
-In the output, you'll find options to open the app in a
+- **`BusTicketingForm`**: Main form container with state management
+- **`TripDetailsStep`**: Step 1 - Bus, driver, conductor, and route selection
+- **`FareDetailsStep`**: Step 2 - Passenger category and origin/destination
+- **`ConfirmationModal`**: Final confirmation before submission
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### UI Components
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **`FormPicker`**: Custom picker with modal interface
+- **`StepIndicator`**: Progress indicator showing current step
+- **`TripSummary`**: Summary display of trip details
 
-## Get a fresh project
+## Usage
 
-When you're ready, run:
+The app follows a simple 2-step process:
+
+### Step 1: Trip Details
+1. Select bus number
+2. Choose driver
+3. Select conductor  
+4. Pick route
+
+### Step 2: Fare Details
+1. Select passenger category
+2. Choose origin stop
+3. Select destination stop
+4. Review calculated fare
+
+### Step 3: Confirmation
+1. Review all details
+2. Confirm to submit
+
+## Configuration
+
+All constants are centrally managed in the `config` folder:
+
+- **Bus numbers, drivers, conductors**: `bus-trip-constants.ts`
+- **Routes and stops**: `bus-trip-constants.ts`
+- **Fare matrix**: `fare-matrix.ts`
+
+## Fare Calculation
+
+- Automatic calculation based on route and stops
+- 20% discount for Students, Senior Citizens, and PWDs
+- Real-time updates as selections change
+
+## TypeScript
+
+Full TypeScript support with:
+- Strongly typed form data
+- Type-safe configuration constants
+- Proper prop typing for all components
+
+## Running the App
 
 ```bash
-npm run reset-project
+# Start the development server
+npm start
+
+# Run on specific platforms
+npm run android
+npm run ios
+npm run web
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Development
 
-## Learn more
+The app is built with:
+- React Native + Expo
+- TypeScript for type safety
+- Modern React hooks for state management
+- Custom UI components for better UX
 
-To learn more about developing your project with Expo, look at the following resources:
+## Next Steps
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Add data persistence with AsyncStorage
+- Implement offline sync capabilities
+- Add receipt generation
+- Connect to backend API
+- Add analytics and error tracking
