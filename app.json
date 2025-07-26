@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "catislandapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
@@ -34,10 +34,17 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "./plugins/sunmi-printer-plugin.js"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7188f939-0c12-4f65-86d3-6b856def0a3c"
+      }
     }
   }
 }

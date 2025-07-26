@@ -1,5 +1,5 @@
-import { NativeModules, Platform } from 'react-native';
 import type { FormData } from '../components/BusTicketingForm';
+import * as SunmiPrinterLibrary from '@mitsuharu/react-native-sunmi-printer-library'
 
 // Receipt printer interface
 interface ReceiptPrinter {
@@ -70,98 +70,117 @@ Fare Amount: ₱${data.fare?.toFixed(2)}
   }
 }
 
-// Thermal printer implementation (for production)
-class ThermalReceiptPrinter implements ReceiptPrinter {
-  private printerModule: any;
+// Sunmi thermal printer implementation (for production POS devices)
+class SunmiReceiptPrinter implements ReceiptPrinter {
+  private isInitialized: boolean = false;
 
   constructor() {
-    // This would be your native thermal printer module
-    this.printerModule = NativeModules.ThermalPrinter;
+    this.initializePrinter();
+  }
+
+  private async initializePrinter() {
+    try {
+      await SunmiPrinterLibrary.prepare();
+      this.isInitialized = true;
+      console.log('Sunmi printer initialized successfully');
+    } catch (error: any) {
+      console.warn('Sunmi device not supported or initialization failed:', error.message);
+      this.isInitialized = false;
+    }
   }
 
   async isConnected(): Promise<boolean> {
-    try {
-      return await this.printerModule?.isConnected() || false;
-    } catch (error) {
-      console.error('Printer connection check failed:', error);
-      return false;
+    if (!this.isInitialized) {
+      await this.initializePrinter();
     }
+    return this.isInitialized;
   }
 
   async connect(deviceAddress?: string): Promise<boolean> {
-    try {
-      return await this.printerModule?.connect(deviceAddress) || false;
-    } catch (error) {
-      console.error('Printer connection failed:', error);
-      return false;
-    }
+    return await this.isConnected();
   }
 
   async disconnect(): Promise<boolean> {
-    try {
-      return await this.printerModule?.disconnect() || false;
-    } catch (error) {
-      console.error('Printer disconnection failed:', error);
-      return false;
-    }
+    // Sunmi printers don't need explicit disconnect
+    return true;
   }
 
   async getConnectedDevices(): Promise<string[]> {
-    try {
-      return await this.printerModule?.getConnectedDevices() || [];
-    } catch (error) {
-      console.error('Failed to get connected devices:', error);
-      return [];
+    if (this.isInitialized) {
+      return ['Sunmi Built-in Printer'];
     }
+    return [];
   }
 
   async printReceipt(data: FormData): Promise<boolean> {
-    try {
-      const receiptCommands = this.generateESCPOSCommands(data);
-      return await this.printerModule?.printRawData(receiptCommands) || false;
-    } catch (error) {
-      console.error('Receipt printing failed:', error);
+    if (!this.isInitialized) {
+      console.error('Sunmi printer not initialized');
       return false;
     }
-  }
 
-  private generateESCPOSCommands(data: FormData): string {
-    const now = new Date();
-    const receiptNumber = `R${now.getTime().toString().slice(-6)}`;
-    
-    // ESC/POS commands for thermal printers
-    const ESC = '\x1B';
-    const INIT = `${ESC}@`; // Initialize printer
-    const CENTER = `${ESC}a1`; // Center alignment
-    const LEFT = `${ESC}a0`; // Left alignment
-    const BOLD_ON = `${ESC}E1`; // Bold text on
-    const BOLD_OFF = `${ESC}E0`; // Bold text off
-    const LARGE_TEXT = `${ESC}!1`; // Large text
-    const NORMAL_TEXT = `${ESC}!0`; // Normal text
-    const CUT_PAPER = `${ESC}m`; // Cut paper
-    const LINE_FEED = '\n';
-    
-    return `${INIT}${CENTER}${BOLD_ON}${LARGE_TEXT}BUS TICKETING SYSTEM${NORMAL_TEXT}${BOLD_OFF}${LINE_FEED}` +
-           `=====================================${LINE_FEED}` +
-           `${LEFT}Receipt #: ${receiptNumber}${LINE_FEED}` +
-           `Date: ${now.toLocaleDateString()}${LINE_FEED}` +
-           `Time: ${now.toLocaleTimeString()}${LINE_FEED}` +
-           `-------------------------------------${LINE_FEED}` +
-           `Bus Number: ${data.busNumber}${LINE_FEED}` +
-           `Driver: ${data.driver}${LINE_FEED}` +
-           `Conductor: ${data.conductor}${LINE_FEED}` +
-           `Route: ${data.route}${LINE_FEED}` +
-           `-------------------------------------${LINE_FEED}` +
-           `From: ${data.fromStop}${LINE_FEED}` +
-           `To: ${data.toStop}${LINE_FEED}` +
-           `Passenger: ${data.passengerCategory}${LINE_FEED}` +
-           `-------------------------------------${LINE_FEED}` +
-           `${BOLD_ON}Fare Amount: ₱${data.fare?.toFixed(2)}${BOLD_OFF}${LINE_FEED}` +
-           `-------------------------------------${LINE_FEED}` +
-           `${CENTER}Thank you for riding!${LINE_FEED}` +
-           `Have a safe journey ahead${LINE_FEED}` +
-           `=====================================${LINE_FEED}` +
-           `${LINE_FEED}${LINE_FEED}${LINE_FEED}${CUT_PAPER}`;
+    try {
+      const now = new Date();
+      const receiptNumber = `R${now.getTime().toString().slice(-6)}`;
+
+      // Use transaction for reliable printing
+      await SunmiPrinterLibrary.enterPrinterBuffer(true);
+
+      // Header
+      await SunmiPrinterLibrary.setAlignment('center');
+      await SunmiPrinterLibrary.setFontSize(24);
+      await SunmiPrinterLibrary.setTextStyle('bold', true);
+      await SunmiPrinterLibrary.printText('BUS TICKETING SYSTEM\n');
+      
+      await SunmiPrinterLibrary.setTextStyle('bold', false);
+      await SunmiPrinterLibrary.setFontSize(16);
+      await SunmiPrinterLibrary.printText('=====================================\n');
+
+      // Receipt details
+      await SunmiPrinterLibrary.setAlignment('left');
+      await SunmiPrinterLibrary.printText(`Receipt #: ${receiptNumber}\n`);
+      await SunmiPrinterLibrary.printText(`Date: ${now.toLocaleDateString()}\n`);
+      await SunmiPrinterLibrary.printText(`Time: ${now.toLocaleTimeString()}\n`);
+      await SunmiPrinterLibrary.printText('-------------------------------------\n');
+
+      // Trip information
+      await SunmiPrinterLibrary.printText(`Bus Number: ${data.busNumber}\n`);
+      await SunmiPrinterLibrary.printText(`Driver: ${data.driver}\n`);
+      await SunmiPrinterLibrary.printText(`Conductor: ${data.conductor}\n`);
+      await SunmiPrinterLibrary.printText(`Route: ${data.route}\n`);
+      await SunmiPrinterLibrary.printText('-------------------------------------\n');
+
+      // Journey details
+      await SunmiPrinterLibrary.printText(`From: ${data.fromStop}\n`);
+      await SunmiPrinterLibrary.printText(`To: ${data.toStop}\n`);
+      await SunmiPrinterLibrary.printText(`Passenger: ${data.passengerCategory}\n`);
+      await SunmiPrinterLibrary.printText('-------------------------------------\n');
+
+      // Fare amount (highlighted)
+      await SunmiPrinterLibrary.setAlignment('center');
+      await SunmiPrinterLibrary.setTextStyle('bold', true);
+      await SunmiPrinterLibrary.setFontSize(20);
+      await SunmiPrinterLibrary.printText(`Fare Amount: ₱${data.fare?.toFixed(2)}\n`);
+      
+      await SunmiPrinterLibrary.setTextStyle('bold', false);
+      await SunmiPrinterLibrary.setFontSize(16);
+      await SunmiPrinterLibrary.printText('-------------------------------------\n');
+
+      // Footer
+      await SunmiPrinterLibrary.printText('Thank you for riding!\n');
+      await SunmiPrinterLibrary.printText('Have a safe journey ahead\n');
+      await SunmiPrinterLibrary.printText('=====================================\n');
+
+      // Feed paper and commit transaction
+      await SunmiPrinterLibrary.lineWrap(3);
+      await SunmiPrinterLibrary.exitPrinterBuffer(true);
+
+      console.log('Receipt printed successfully on Sunmi device');
+      return true;
+
+    } catch (error) {
+      console.error('Failed to print receipt on Sunmi device:', error);
+      return false;
+    }
   }
 }
 
@@ -171,11 +190,12 @@ class PrinterService {
 
   static getInstance(): ReceiptPrinter {
     if (!PrinterService.instance) {
-      // Use mock printer in development, thermal printer in production
-      if (__DEV__ || !NativeModules.ThermalPrinter) {
+      // Use mock printer in development, Sunmi printer in production
+      // Temporarily force production mode for testing: change 'true' to 'false' to test Sunmi printer
+      if (true) { // Change this to 'false' to test Sunmi printer
         PrinterService.instance = new MockReceiptPrinter();
       } else {
-        PrinterService.instance = new ThermalReceiptPrinter();
+        PrinterService.instance = new SunmiReceiptPrinter();
       }
     }
     return PrinterService.instance;
