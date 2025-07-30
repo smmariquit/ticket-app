@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Modal,
   View,
@@ -37,42 +37,44 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <View style={styles.modalContent}>
           <Text style={styles.title}>Confirm Trip Details</Text>
           
-          <ScrollView style={styles.detailsContainer}>
-            <DetailRow label="Bus Number" value={formData.busNumber?.toString()} />
-            <DetailRow label="Driver" value={formData.driver} />
-            <DetailRow label="Conductor" value={formData.conductor} />
-            <DetailRow label="Route" value={formData.route} />
-            <DetailRow label="Passenger Category" value={formData.passengerCategory} />
-            <DetailRow label="Origin" value={formData.fromStop} />
-            <DetailRow label="Destination" value={formData.toStop} />
-            <DetailRow 
-              label="Fare" 
-              value={formData.fare ? `₱${formData.fare.toFixed(2)}` : null}
-              highlight={true}
+          <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={true}>
+            <View style={styles.detailsContainer}>
+              <DetailRow label="Bus Number" value={formData.busNumber?.toString()} />
+              <DetailRow label="Driver" value={formData.driver} />
+              <DetailRow label="Conductor" value={formData.conductor} />
+              <DetailRow label="Route" value={formData.route} />
+              <DetailRow label="Passenger Category" value={formData.passengerCategory} />
+              <DetailRow label="Origin" value={formData.fromStop} />
+              <DetailRow label="Destination" value={formData.toStop} />
+              <DetailRow 
+                label="Fare" 
+                value={formData.fare ? `₱${formData.fare.toFixed(2)}` : null}
+                highlight={true}
+              />
+            </View>
+
+            {/* Receipt Printer Component */}
+            <ReceiptPrinter 
+              formData={formData}
+              onPrintSuccess={() => {
+                Alert.alert(
+                  'Success',
+                  'Receipt printed successfully! Transaction completed.',
+                  [{ text: 'OK', onPress: onConfirm }]
+                );
+              }}
+              onPrintError={(error: string) => {
+                Alert.alert(
+                  'Print Error',
+                  `Failed to print receipt: ${error}\n\nWould you like to continue without printing?`,
+                  [
+                    { text: 'Try Again', style: 'cancel' },
+                    { text: 'Continue', onPress: onConfirm }
+                  ]
+                );
+              }}
             />
           </ScrollView>
-
-          {/* Receipt Printer Component */}
-          <ReceiptPrinter 
-            formData={formData}
-            onPrintSuccess={() => {
-              Alert.alert(
-                'Success',
-                'Receipt printed successfully! Transaction completed.',
-                [{ text: 'OK', onPress: onConfirm }]
-              );
-            }}
-            onPrintError={(error: string) => {
-              Alert.alert(
-                'Print Error',
-                `Failed to print receipt: ${error}\n\nWould you like to continue without printing?`,
-                [
-                  { text: 'Try Again', style: 'cancel' },
-                  { text: 'Continue', onPress: onConfirm }
-                ]
-              );
-            }}
-          />
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
@@ -117,7 +119,7 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '100%',
     maxWidth: 400,
-    maxHeight: '80%',
+    maxHeight: '90%',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -126,6 +128,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 6.84,
     elevation: 10,
+    flexDirection: 'column',
   },
   title: {
     fontSize: 20,
@@ -134,8 +137,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
+  scrollContainer: {
+    flex: 1,
+    marginBottom: 20,
+  },
   detailsContainer: {
-    maxHeight: 300,
     marginBottom: 20,
   },
   detailRow: {
