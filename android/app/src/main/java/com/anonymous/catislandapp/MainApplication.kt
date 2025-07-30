@@ -17,6 +17,9 @@ import com.facebook.soloader.SoLoader
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
 
+// Import the Newland printer package
+import com.catislandapp.newlandprinter.NewlandPrinterPackage
+
 class MainApplication : MultiDexApplication(), ReactApplication {
 
   override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
@@ -25,7 +28,8 @@ class MainApplication : MultiDexApplication(), ReactApplication {
           override fun getPackages(): List<ReactPackage> {
             val packages = PackageList(this).packages
             // Packages that cannot be autolinked yet can be added manually here, for example:
-            // packages.add(MyReactNativePackage())
+            // Add the Newland printer package
+            packages.add(NewlandPrinterPackage())
             return packages
           }
 

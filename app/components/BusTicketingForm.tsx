@@ -1,16 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { TripDetailsStep } from './TripDetailsStep';
 import { FareDetailsStep } from './FareDetailsStep';
-import { ConfirmationModal } from './ConfirmationModal';
-import { StepIndicator } from './StepIndicator';
 import type { BusNumber, Driver, Conductor, Route, PassengerCategory } from '../config/bus-trip-constants';
 
 export interface FormData {
@@ -27,9 +24,13 @@ export interface FormData {
   fare: number | null;
 }
 
-const BusTicketingForm: React.FC = () => {
+interface BusTicketingFormProps {
+  onShowConfirmation: (formData: FormData) => void;
+  resetTrigger?: number; // Add a reset trigger prop
+}
+
+const BusTicketingForm: React.FC<BusTicketingFormProps> = ({ onShowConfirmation, resetTrigger }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     busNumber: null,
     driver: null,
@@ -50,47 +51,36 @@ const BusTicketingForm: React.FC = () => {
   };
 
   const isStep2Valid = () => {
-    return !!(formData.passengerCategory && formData.fromStop && formData.toStop && formData.fare);
+    const valid = !!(formData.passengerCategory && formData.fromStop && formData.toStop && formData.fare);
+    console.log('🔍 isStep2Valid check:', {
+      passengerCategory: formData.passengerCategory,
+      fromStop: formData.fromStop,
+      toStop: formData.toStop,
+      fare: formData.fare,
+      result: valid
+    });
+    return valid;
   };
 
   const handleNext = () => {
+    console.log('🚀 handleNext called - currentStep:', currentStep, 'isStep1Valid:', isStep1Valid(), 'isStep2Valid:', isStep2Valid());
+    console.log('📋 Current formData:', formData);
+    
     if (currentStep === 1 && isStep1Valid()) {
+      console.log('✅ Moving to step 2');
       setCurrentStep(2);
     } else if (currentStep === 2 && isStep2Valid()) {
-      setShowConfirmation(true);
+      console.log('✅ Showing confirmation modal');
+      console.log('📄 FormData being passed to confirmation:', formData);
+      onShowConfirmation(formData);
+    } else {
+      console.log('❌ Validation failed - Step:', currentStep, 'Step1Valid:', isStep1Valid(), 'Step2Valid:', isStep2Valid());
     }
   };
 
   const handleBack = () => {
     if (currentStep === 2) {
       setCurrentStep(1);
-    }
-  };
-
-  const handleConfirm = async () => {
-    try {
-      // Add timestamp
-      const tripData = {
-        ...formData,
-        entered_timestamp: new Date().toISOString(),
-      };
-
-      // Here you would normally submit to your backend
-      console.log('Trip data:', tripData);
-      
-      // For now, just show success and reset
-      Alert.alert('Success', 'Trip entry recorded successfully!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            setShowConfirmation(false);
-            resetForm();
-          },
-        },
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to submit trip data. Please try again.');
-      console.error('Submit error:', error);
     }
   };
 
@@ -108,24 +98,18 @@ const BusTicketingForm: React.FC = () => {
     setCurrentStep(1);
   };
 
-  const resetStep2 = () => {
-    setFormData(prev => ({
-      ...prev,
-      passengerCategory: null,
-      fromStop: null,
-      toStop: null,
-      fare: null,
-    }));
-  };
+  // Reset form when resetTrigger changes
+  useEffect(() => {
+    if (resetTrigger && resetTrigger > 0) {
+      resetForm();
+    }
+  }, [resetTrigger]);
 
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.header}>
-        <StepIndicator currentStep={currentStep} totalSteps={2} />
-      </View>
       
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.formContainer}>
@@ -147,14 +131,6 @@ const BusTicketingForm: React.FC = () => {
           )}
         </View>
       </ScrollView>
-
-      <ConfirmationModal
-        visible={showConfirmation}
-        formData={formData}
-        onConfirm={handleConfirm}
-        onCancel={() => setShowConfirmation(false)}
-        onReset={resetStep2}
-      />
     </KeyboardAvoidingView>
   );
 };
@@ -166,16 +142,16 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#2b8aed',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingVertical: 10, // Reduced from 20 to 10
+    paddingHorizontal: 15, // Reduced from 20 to 15
+    paddingTop: Platform.OS === 'ios' ? 45 : 15, // Reduced from 50 to 45 and 20 to 15
   },
   scrollContainer: {
     flex: 1,
   },
   formContainer: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
 });
 

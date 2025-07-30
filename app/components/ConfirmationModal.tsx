@@ -38,20 +38,6 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <Text style={styles.title}>Confirm Trip Details</Text>
           
           <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={true}>
-            <View style={styles.detailsContainer}>
-              <DetailRow label="Bus Number" value={formData.busNumber?.toString()} />
-              <DetailRow label="Driver" value={formData.driver} />
-              <DetailRow label="Conductor" value={formData.conductor} />
-              <DetailRow label="Route" value={formData.route} />
-              <DetailRow label="Passenger Category" value={formData.passengerCategory} />
-              <DetailRow label="Origin" value={formData.fromStop} />
-              <DetailRow label="Destination" value={formData.toStop} />
-              <DetailRow 
-                label="Fare" 
-                value={formData.fare ? `₱${formData.fare.toFixed(2)}` : null}
-                highlight={true}
-              />
-            </View>
 
             {/* Receipt Printer Component */}
             <ReceiptPrinter 
@@ -78,7 +64,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-              <Text style={styles.confirmButtonText}>Complete Without Print</Text>
+              <Text style={styles.confirmButtonText}>Complete</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -96,30 +82,25 @@ interface DetailRowProps {
   highlight?: boolean;
 }
 
-const DetailRow: React.FC<DetailRowProps> = ({ label, value, highlight = false }) => (
-  <View style={[styles.detailRow, highlight && styles.highlightRow]}>
-    <Text style={[styles.detailLabel, highlight && styles.highlightLabel]}>{label}:</Text>
-    <Text style={[styles.detailValue, highlight && styles.highlightValue]}>
-      {value || 'N/A'}
-    </Text>
-  </View>
-);
-
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+    justifyContent: 'flex-start', // Changed from 'center' to 'flex-start' to start from top
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 10, // Only horizontal padding
+    paddingTop: 0, // No top padding to start from very top
+    paddingBottom: 10, // Small bottom padding
   },
   modalContent: {
     backgroundColor: 'white',
     borderRadius: 15,
     padding: 20,
-    width: '100%',
-    maxWidth: 400,
-    maxHeight: '90%',
+    paddingBottom: 25, // Extra bottom padding to ensure buttons aren't cut
+    width: '95%', // Increased from default to take up more width
+    maxWidth: 500, // Increased max width
+    minHeight: '100%', // Increased from 300 to allow more content
+    maxHeight: '100%', // Reduced from 100% to leave space for buttons
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -139,7 +120,8 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
-    marginBottom: 20,
+    minHeight: 600, 
+    marginBottom: 5, // Increased margin to give more space for bottom buttons
   },
   detailsContainer: {
     marginBottom: 20,

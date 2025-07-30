@@ -9,7 +9,6 @@ interface StepIndicatorProps {
 export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, totalSteps }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bus Trip Entry</Text>
       <View style={styles.stepContainer}>
         {Array.from({ length: totalSteps }, (_, index) => {
           const stepNumber = index + 1;
@@ -45,12 +44,6 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, total
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 20,
   },
   stepContainer: {
     flexDirection: 'row',

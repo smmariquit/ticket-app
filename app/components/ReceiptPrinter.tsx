@@ -7,8 +7,10 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import PrinterService from '../services/PrinterService';
 import type { FormData } from './BusTicketingForm';
+
+// Import the new Newland printer service
+import NewlandPrinterService from '../services/NewlandPrinterService';
 
 interface ReceiptPrinterProps {
   formData: FormData;
@@ -23,41 +25,23 @@ export const ReceiptPrinter: React.FC<ReceiptPrinterProps> = ({
 }) => {
   const [isPrinting, setIsPrinting] = useState(false);
   const [printerConnected, setPrinterConnected] = useState(false);
+  
+  // Initialize the printer service
+  const printerService = NewlandPrinterService.getInstance();
 
-  const checkPrinterConnection = async () => {
-    try {
-      const printer = PrinterService.getInstance();
-      const connected = await printer.isConnected();
-      setPrinterConnected(connected);
-      return connected;
-    } catch (error) {
-      console.error('Failed to check printer connection:', error);
-      return false;
-    }
-  };
+  console.log('🖨️ ReceiptPrinter component rendering with formData:', formData);
 
   const connectToPrinter = async () => {
+    console.log('🔌 Attempting to connect to Newland printer...');
     try {
-      const printer = PrinterService.getInstance();
-      const devices = await printer.getConnectedDevices();
-      
-      if (devices.length === 0) {
-        Alert.alert('No Printers Found', 'Please connect a thermal printer to continue.');
-        return false;
-      }
-
-      // Auto-connect to first available device
-      const connected = await printer.connect(devices[0]);
-      setPrinterConnected(connected);
-      
-      if (!connected) {
-        Alert.alert('Connection Failed', 'Unable to connect to the printer. Please try again.');
-      }
-      
-      return connected;
+      const success = await printerService.connect();
+      setPrinterConnected(success);
+      Alert.alert(success ? 'Connected' : 'Connection Failed', 
+                  success ? 'Newland printer connected successfully' : 'Failed to connect to Newland printer');
+      return success;
     } catch (error) {
-      console.error('Failed to connect to printer:', error);
-      Alert.alert('Connection Error', 'An error occurred while connecting to the printer.');
+      console.error('Connection error:', error);
+      Alert.alert('Error', 'Failed to connect to printer');
       return false;
     }
   };
@@ -68,35 +52,22 @@ export const ReceiptPrinter: React.FC<ReceiptPrinterProps> = ({
       return;
     }
 
+    if (!printerConnected) {
+      Alert.alert('Not Connected', 'Please connect to printer first');
+      return;
+    }
+
     setIsPrinting(true);
     
     try {
-      // Check connection first
-      let connected = await checkPrinterConnection();
+      console.log('🖨️ Starting Newland receipt printing...');
+      const success = await printerService.printReceipt(formData);
       
-      // If not connected, try to connect
-      if (!connected) {
-        connected = await connectToPrinter();
-      }
-      
-      if (!connected) {
-        setIsPrinting(false);
-        return;
-      }
-
-      // Print the receipt
-      const printer = PrinterService.getInstance();
-      const success = await printer.printReceipt(formData);
-      
-      if (success) {
-        Alert.alert(
-          'Receipt Printed',
-          'Receipt has been printed successfully!',
-          [{ text: 'OK', onPress: onPrintSuccess }]
-        );
-      } else {
-        throw new Error('Print operation failed');
-      }
+      Alert.alert(
+        success ? 'Receipt Printed' : 'Print Failed',
+        success ? 'Receipt has been printed successfully!' : 'Failed to print receipt',
+        [{ text: 'OK', onPress: success ? onPrintSuccess : undefined }]
+      );
     } catch (error) {
       console.error('Print failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown printing error';
@@ -123,7 +94,7 @@ export const ReceiptPrinter: React.FC<ReceiptPrinterProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Receipt Preview</Text>
+      <Text style={styles.title}>📄 Receipt Preview</Text>
       
       <View style={styles.receiptPreview}>
         <Text style={styles.header}>BUS TICKETING SYSTEM</Text>
@@ -205,12 +176,21 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   receiptPreview: {
-    backgroundColor: 'white',
+    backgroundColor: '#ffffff',
     padding: 15,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    borderWidth: 2,
+    borderColor: '#2b8aed',
     fontFamily: 'monospace',
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   header: {
     fontSize: 14,
