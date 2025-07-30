@@ -90,10 +90,11 @@ android {
     namespace 'com.anonymous.catislandapp'
     defaultConfig {
         applicationId 'com.anonymous.catislandapp'
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
+        multiDexEnabled true
     }
     signingConfigs {
         debug {
@@ -174,4 +175,7 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // Add multidex support for Sunmi library
+    implementation 'androidx.multidex:multidex:2.0.1'
 }
